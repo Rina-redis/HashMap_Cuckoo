@@ -74,6 +74,7 @@ private:
     ArrayOfPrimeNum PrimeArr;
 
     short a = 2 , b;
+    float f;
     int size=0;
     int arrlen=11;
 
@@ -100,8 +101,32 @@ private:
         delete[] array;
         array = new_arr;
     }
-
-    long long hash(long long key,int i)
+    void rehash(){
+        static bool flag = 0;
+        HashSigment *new_arr = new HashSigment[arrlen];
+        f = ((float)(rand())/RAND_MAX);
+        b = rand()%20+1;
+        a = PrimeArr.FindNearest(rand()%20);
+        if(flag == 0){
+            for(int i = 0;i < arrlen;i++){
+                if(array[i].Empty == 0){
+                    insertforNewArr(array[i].key,array[i].data,new_arr);
+                }
+            }
+            delete[] array;
+            array = new_arr;
+            return;
+        }
+        for(int i = arrlen-1;i>=0;i++){
+            if(array[i].Empty == 0){
+                insertforNewArr(array[i].key,array[i].data,new_arr);
+            }
+        }
+        delete[] array;
+        array = new_arr;
+        return;
+    }
+    long long hash(long long key,int i,short a,short b, float f)
     {
         const float fi = (1 + sqrt(5))/2;
         switch(i){
@@ -109,7 +134,7 @@ private:
                 return ((a * key + b) % 9149658775000477) % arrlen;
             }
             case 1:{
-                return (long long)(fmod(0.6*(float)key,1.0) * arrlen);
+                return (long long)(fmod(f*(float)key,1.0) * arrlen);
             }
             case 2:{
                 return key % arrlen;
@@ -123,18 +148,18 @@ private:
         HashSigment A{value,0,key};
 
         for(int i = 0; i < 4; i++){
-            long long index = hash(key,i);
+            long long index = hash(key,i,a,b,f);
             if(arr[index].Empty == 1){
                 arr[index]=A;
                 return;
             }
         }
-        long long index = hash(key,rand()%4);
+        long long index = hash(key,rand()%4,a,b,f);
         swap(&arr[index],&A);
         insertforNewArr(A.key, A.data,arr);
     }
     void insertCycle(long long key, const T& value,int i){
-        if(i == 20){
+        if(i == (int)log2f(arrlen)){
             rehash();
             insert(key,value);
             return;
@@ -143,44 +168,21 @@ private:
         HashSigment A{value,0,key};
 
         for(int i = 0; i < 4; i++){
-            long long index = hash(key,i);
+            long long index = hash(key,i,a,b,f);
             if(array[index].Empty == 1){
                 size++;
                 array[index]=A;
                 return;
             }
         }
-        long long index = hash(key,rand()%4);
+        long long index = hash(key,rand()%4,a,b,f);
         swap(&array[index],&A);
         insertCycle(A.key, A.data,i);
     }
-    void rehash(){
-        static bool flag = 1;
-        if(flag == 0){
-            for(int i = arrlen-1; i>=0; i--){
-                if(array[i].Empty == 0){
-                    size--;
-                    array[i].Empty = 1;
-                    insert(array[i].key,array[i].data);
-                }
-            }
-            flag = 1;
-            return;
-        }
-        for(int i = 0; i < arrlen; i++){
-            if(array[i].Empty == 0){
-                size--;
-                array[i].Empty = 1;
-                insert(array[i].key,array[i].data);
-            }
-        }
-        flag = 0;
-        return;
-    }
 public:
-    HashMap():b(rand()%19 + 1){
+    HashMap():b(rand()%20 + 1),f((float)(rand())/RAND_MAX){
         PrimeArr.set_newArr(arrlen*4);
-        a = PrimeArr.FindNearest(rand()%12);
+        a = PrimeArr.FindNearest(rand()%20);
     }
 
     ~HashMap(){
@@ -199,28 +201,28 @@ public:
         HashSigment A{value,0,key};
 
         for(int i = 0; i < 4; i++){
-            long long index = hash(key,i);
+            long long index = hash(key,i,a,b,f);
             if(array[index].key == key and array[index].Empty == 0){
                 array[index]=A;
                 return;
             }
         }
         for(int i = 0; i < 4; i++){
-            long long index = hash(key,i);
+            long long index = hash(key,i,a,b,f);
             if(array[index].Empty == 1){
                 size++;
                 array[index]=A;
                 return;
             }
         }
-        long long index = hash(key,rand()%3);
+        long long index = hash(key,rand()%4,a,b,f);
         swap(&array[index],&A);
         insertCycle(A.key, A.data,0);
     }
 
     void erase(long long key){
         for(int i = 0; i < 4; i++){
-            long long index = hash(key,i);
+            long long index = hash(key,i,a,b,f);
             if(array[index].key == key and array[index].Empty == 0){
                 size = size-1;
                 array[index].Empty = 1;
@@ -231,7 +233,7 @@ public:
 
     T* find(long long key){
         for(int i = 0; i < 4; i++){
-            long long index = hash(key,i);
+            long long index = hash(key,i,a,b,f);
             if(array[index].key == key and array[index].Empty == 0){
                 return &array[index].data;
             }
