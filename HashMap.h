@@ -115,15 +115,17 @@ private:
             }
             delete[] array;
             array = new_arr;
+            flag = 1;
             return;
         }
-        for(int i = arrlen-1;i>=0;i++){
+        for(int i = arrlen-1;i>=0;i--){
             if(array[i].Empty == 0){
                 insertforNewArr(array[i].key,array[i].data,new_arr);
             }
         }
         delete[] array;
         array = new_arr;
+        flag = 0;
         return;
     }
     long long hash(long long key,int i,short a,short b, float f)
